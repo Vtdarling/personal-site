@@ -1,0 +1,110 @@
+<%- include("partials/header") %>
+
+<section class="hero-card p-5 mb-5">
+  <div class="row g-4 align-items-center">
+    <div class="col-lg-6">
+      <h1 class="display-6 fw-semibold">💕 Love Stories of Veeran</h1>
+      <p class="text-muted">
+        Share your beautiful moments and cherished memories. These special stories celebrate the love and connections that matter most.
+      </p>
+      <div class="card-meta">
+        <span class="text-muted">💑 Add a new love story</span>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="story-card p-4" style="border-left: 3px solid #ff69b4;">
+        <h5 class="fw-semibold" style="color: #ff69b4;">Precious Moments</h5>
+        <p class="text-muted mb-0">
+          Document the love that makes life beautiful. Every moment shared with someone special is worth treasuring.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="story-card p-4 p-lg-5">
+  <h2 class="fw-semibold mb-4">✍️ Add Your Love Story</h2>
+  <form method="POST" action="/add-love-story" id="loveStoryForm">
+    <div class="row g-4">
+      <div class="col-12">
+        <label class="form-label">Story Title</label>
+        <input
+          type="text"
+          name="title"
+          id="loveTitle"
+          class="form-control"
+          placeholder="Give this love story a beautiful title"
+          required
+        />
+      </div>
+      <div class="col-12">
+        <label class="form-label">Date of Story (Optional)</label>
+        <input
+          type="text"
+          name="formattedDate"
+          id="loveDate"
+          class="form-control"
+          placeholder="DD/MM/YYYY (defaults to today)"
+        />
+      </div>
+      <div class="col-12">
+        <label class="form-label">Your Story</label>
+        <textarea
+          name="content"
+          class="form-control"
+          rows="10"
+          placeholder="Write your beautiful love story here..."
+          id="loveContent"
+          required
+        ></textarea>
+      </div>
+      <div class="col-12 d-flex flex-wrap gap-3">
+        <button class="btn btn-primary" type="submit" style="background-color: #ff69b4; border-color: #ff69b4;">Save Love Story</button>
+        <a class="btn btn-outline-light" href="/archive">Back to Archive</a>
+      </div>
+    </div>
+  </form>
+</section>
+
+<script>
+  const loveStoryKey = "love-story-draft";
+  const titleInput = document.getElementById("loveTitle");
+  const dateInput = document.getElementById("loveDate");
+  const contentInput = document.getElementById("loveContent");
+  const form = document.getElementById("loveStoryForm");
+
+  // Load draft
+  const loadDraft = () => {
+    const raw = localStorage.getItem(loveStoryKey);
+    if (!raw) return;
+    try {
+      const { title, date, content } = JSON.parse(raw);
+      if (title) titleInput.value = title;
+      if (date) dateInput.value = date;
+      if (content) contentInput.value = content;
+    } catch (e) {
+      // Ignore parse errors
+    }
+  };
+  loadDraft();
+
+  // Save draft on input
+  const saveDraft = () => {
+    const draft = {
+      title: titleInput.value,
+      date: dateInput.value,
+      content: contentInput.value,
+    };
+    localStorage.setItem(loveStoryKey, JSON.stringify(draft));
+  };
+  titleInput.addEventListener("input", saveDraft);
+  dateInput.addEventListener("input", saveDraft);
+  contentInput.addEventListener("input", saveDraft);
+
+  // Clear draft on successful submission
+  form.addEventListener("submit", () => {
+    localStorage.removeItem(loveStoryKey);
+  });
+</script>
+
+<%- include("partials/footer") %>

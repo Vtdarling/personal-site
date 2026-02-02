@@ -1,0 +1,91 @@
+<%- include("partials/header") %>
+
+<section class="hero-card p-5 mb-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div>
+      <h1 class="display-6 fw-semibold mb-2">📜 Goal History</h1>
+      <p class="text-muted mb-0">Review your previous daily and weekly goals with progress tracking.</p>
+    </div>
+    <a class="btn btn-outline-light" href="/goals">← Back to Goals</a>
+  </div>
+</section>
+
+<section class="row g-4">
+  <div class="col-lg-6">
+    <div class="story-card p-4">
+      <h5 class="fw-semibold mb-4">☀️ Past Daily Goals</h5>
+      <% if (dailyGroups.length === 0) { %>
+      <p class="text-muted mb-0">No past daily goals yet.</p>
+      <% } %>
+      <div class="d-flex flex-column gap-4">
+        <% dailyGroups.forEach((group) => { %>
+        <div class="history-group">
+          <div class="history-header">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="history-date mb-0">📅 <%= group.dateKey %></h6>
+              <span class="history-stats"><%= group.completed %>/<%= group.total %> completed</span>
+            </div>
+            <div class="progress-bar-custom" style="height: 24px; margin-bottom: 12px;">
+              <div class="progress-fill" style="width: <%= group.progress %>%">
+                <span class="progress-text" style="font-size: 0.75rem;"><%= group.progress %>%</span>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex flex-column gap-2">
+            <% group.goals.forEach((goal) => { %>
+            <div class="history-goal-item <%= goal.status === 'Completed' ? 'completed' : 'pending' %>">
+              <div class="d-flex align-items-center gap-2">
+                <span class="history-checkbox <%= goal.status === 'Completed' ? 'checked' : '' %>">
+                  <% if (goal.status === 'Completed') { %>✓<% } %>
+                </span>
+                <span class="history-goal-title"><%= goal.title %></span>
+              </div>
+            </div>
+            <% }) %>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="story-card p-4">
+      <h5 class="fw-semibold mb-4">📅 Past Weekly Goals</h5>
+      <% if (weeklyGroups.length === 0) { %>
+      <p class="text-muted mb-0">No past weekly goals yet.</p>
+      <% } %>
+      <div class="d-flex flex-column gap-4">
+        <% weeklyGroups.forEach((group) => { %>
+        <div class="history-group">
+          <div class="history-header">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="history-date mb-0">📆 <%= group.weekKey %></h6>
+              <span class="history-stats"><%= group.completed %>/<%= group.total %> completed</span>
+            </div>
+            <div class="progress-bar-custom" style="height: 24px; margin-bottom: 12px;">
+              <div class="progress-fill" style="width: <%= group.progress %>%">
+                <span class="progress-text" style="font-size: 0.75rem;"><%= group.progress %>%</span>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex flex-column gap-2">
+            <% group.goals.forEach((goal) => { %>
+            <div class="history-goal-item <%= goal.status === 'Completed' ? 'completed' : 'pending' %>">
+              <div class="d-flex align-items-center gap-2">
+                <span class="history-checkbox <%= goal.status === 'Completed' ? 'checked' : '' %>">
+                  <% if (goal.status === 'Completed') { %>✓<% } %>
+                </span>
+                <span class="history-goal-title"><%= goal.title %></span>
+              </div>
+            </div>
+            <% }) %>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include("partials/footer") %>

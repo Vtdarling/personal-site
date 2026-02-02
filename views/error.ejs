@@ -1,0 +1,16 @@
+<%- include('./partials/header') %>
+
+<div class="container mt-5">
+  <div class="alert alert-danger" role="alert">
+    <h4 class="alert-heading">⚠️ Error</h4>
+    <p><strong><%= message %></strong></p>
+    <% if (error && error.message) { %>
+      <hr>
+      <p class="mb-0 text-muted">Details: <%= error.message %></p>
+    <% } %>
+    <hr>
+    <a href="/" class="btn btn-primary">Go Home</a>
+  </div>
+</div>
+
+<%- include('./partials/footer') %>

@@ -1,0 +1,183 @@
+<%- include("partials/header") %>
+
+<section class="hero-card p-5 mb-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div>
+      <h1 class="display-6 fw-semibold mb-2">🎯 Goals</h1>
+      <p class="text-muted mb-0">Track daily and weekly intentions with clarity.</p>
+    </div>
+    <a class="btn btn-outline-light" href="/goals/history">📜 Past Goals</a>
+  </div>
+</section>
+
+<!-- Progress Overview -->
+<% 
+  const totalDaily = dailyGoals.length;
+  const completedDaily = dailyGoals.filter(g => g.status === 'Completed').length;
+  const totalWeekly = weeklyGoals.length;
+  const completedWeekly = weeklyGoals.filter(g => g.status === 'Completed').length;
+  const dailyProgress = totalDaily > 0 ? Math.round((completedDaily / totalDaily) * 100) : 0;
+  const weeklyProgress = totalWeekly > 0 ? Math.round((completedWeekly / totalWeekly) * 100) : 0;
+  const overallProgress = (dailyProgress + weeklyProgress) / 2;
+%>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <div class="progress-section p-4">
+      <h6 class="section-title mb-3">☀️ Daily Progress</h6>
+      <div class="row g-3">
+        <div class="col-6">
+          <div class="mini-stat-card">
+            <div class="mini-stat-icon">📊</div>
+            <h4 class="mini-stat-value"><%= dailyProgress %>%</h4>
+            <p class="mini-stat-label">Progress</p>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="mini-stat-card">
+            <div class="mini-stat-icon">✅</div>
+            <h4 class="mini-stat-value"><%= completedDaily %>/<%= totalDaily %></h4>
+            <p class="mini-stat-label">Completed</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="progress-section p-4">
+      <h6 class="section-title mb-3">📅 Weekly Progress</h6>
+      <div class="row g-3">
+        <div class="col-6">
+          <div class="mini-stat-card">
+            <div class="mini-stat-icon">📊</div>
+            <h4 class="mini-stat-value"><%= weeklyProgress %>%</h4>
+            <p class="mini-stat-label">Progress</p>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="mini-stat-card">
+            <div class="mini-stat-icon">✅</div>
+            <h4 class="mini-stat-value"><%= completedWeekly %>/<%= totalWeekly %></h4>
+            <p class="mini-stat-label">Completed</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% if (completed) { %>
+<div class="alert alert-success border-0 mb-4 animated-success" role="alert">
+  Goal marked as completed. Keep the momentum going.
+</div>
+<% } %>
+
+<section class="row g-4">
+  <div class="col-lg-6">
+    <div class="story-card goals-card p-4 h-100">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="fw-semibold mb-0">☀️ Daily Goals</h5>
+        <span class="badge-mood">Today · <%= dateKey %></span>
+      </div>
+      <!-- Progress Bar -->
+      <div class="progress-container mb-4">
+        <div class="progress-bar-custom">
+          <div class="progress-fill" style="width: <%= dailyProgress %>%">
+            <span class="progress-text"><%= completedDaily %>/<%= totalDaily %></span>
+          </div>
+        </div>
+      </div>
+      <form class="d-flex flex-wrap gap-2 mb-4" method="POST" action="/goals">
+        <input type="hidden" name="type" value="daily" />
+        <input
+          type="text"
+          name="title"
+          class="form-control flex-grow-1"
+          placeholder="Add a daily goal"
+          required
+        />
+        <button class="btn btn-primary" type="submit">Add</button>
+      </form>
+      <% if (dailyGoals.length === 0) { %>
+      <p class="text-muted mb-0">No daily goals yet. Add your first one.</p>
+      <% } %>
+      <div class="d-flex flex-column gap-3">
+        <% dailyGoals.forEach((goal, index) => { %>
+        <div class="goal-item <%= goal.status === 'Completed' ? 'completed' : '' %>" style="animation-delay: <%= index * 0.1 %>s">
+          <div class="d-flex align-items-center gap-3">
+            <% if (goal.status === "Pending") { %>
+            <form method="POST" action="/goals/<%= goal._id %>/complete" class="checkbox-form">
+              <button class="checkbox-btn" type="submit">
+                <span class="checkbox-custom"></span>
+              </button>
+            </form>
+            <% } else { %>
+            <div class="checkbox-completed">
+              <span class="checkbox-custom checked">✓</span>
+            </div>
+            <% } %>
+            <div class="flex-grow-1">
+              <h6 class="goal-title mb-0"><%= goal.title %></h6>
+            </div>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="story-card goals-card p-4 h-100">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="fw-semibold mb-0">📅 Weekly Goals</h5>
+        <span class="badge-mood">Week · <%= weekKey %></span>
+      </div>
+      <!-- Progress Bar -->
+      <div class="progress-container mb-4">
+        <div class="progress-bar-custom">
+          <div class="progress-fill" style="width: <%= weeklyProgress %>%">
+            <span class="progress-text"><%= completedWeekly %>/<%= totalWeekly %></span>
+          </div>
+        </div>
+      </div>
+      <form class="d-flex flex-wrap gap-2 mb-4" method="POST" action="/goals">
+        <input type="hidden" name="type" value="weekly" />
+        <input
+          type="text"
+          name="title"
+          class="form-control flex-grow-1"
+          placeholder="Add a weekly goal"
+          required
+        />
+        <button class="btn btn-primary" type="submit">Add</button>
+      </form>
+      <% if (weeklyGoals.length === 0) { %>
+      <p class="text-muted mb-0">No weekly goals yet. Add your first one.</p>
+      <% } %>
+      <div class="d-flex flex-column gap-3">
+        <% weeklyGoals.forEach((goal, index) => { %>
+        <div class="goal-item <%= goal.status === 'Completed' ? 'completed' : '' %>" style="animation-delay: <%= index * 0.1 %>s">
+          <div class="d-flex align-items-center gap-3">
+            <% if (goal.status === "Pending") { %>
+            <form method="POST" action="/goals/<%= goal._id %>/complete" class="checkbox-form">
+              <button class="checkbox-btn" type="submit">
+                <span class="checkbox-custom"></span>
+              </button>
+            </form>
+            <% } else { %>
+            <div class="checkbox-completed">
+              <span class="checkbox-custom checked">✓</span>
+            </div>
+            <% } %>
+            <div class="flex-grow-1">
+              <h6 class="goal-title mb-0"><%= goal.title %></h6>
+            </div>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+</section>
+<script src="/js/goals.js"></script>
+<%- include("partials/footer") %>

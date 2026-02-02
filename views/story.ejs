@@ -1,0 +1,24 @@
+<%- include("partials/header") %>
+
+<section class="story-card p-4 p-lg-5">
+  <div class="card-meta mb-4">
+    <span class="text-muted"><%= story.formattedDate %></span>
+  </div>
+  <h1 class="fw-semibold mb-3"><%= story.title || "Untitled Story" %></h1>
+  <div class="story-content"><%= story.content %></div>
+  
+  <div class="d-flex flex-wrap gap-3 mt-4">
+    <% if (canEdit) { %>
+    <a class="btn btn-primary" href="/story/<%= story._id %>/edit">Edit Entry</a>
+    <% } else { %>
+    <button class="btn btn-outline-light" disabled>
+      Edit window expired
+    </button>
+    <% } %>
+    <a class="btn btn-outline-light" href="/story/<%= story._id %>/download">📄 Download</a>
+    <a class="btn btn-outline-light" href="/">← Back to Dashboard</a>
+    <a class="btn btn-outline-light" href="/archive">Back to Archive</a>
+  </div>
+</section>
+
+<%- include("partials/footer") %>

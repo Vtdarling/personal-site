@@ -1,0 +1,61 @@
+<%- include("partials/header") %>
+
+<section class="story-card p-4 p-lg-5 mx-auto" style="max-width: 500px;">
+  <h2 class="fw-semibold mb-4">🔐 Download Verification</h2>
+  <p class="text-muted mb-4">
+    To download "<%= storyTitle || "this story" %>", please enter the password.
+  </p>
+
+  <form id="downloadVerifyForm">
+    <div class="mb-3">
+      <label for="downloadPassword" class="form-label">Password</label>
+      <input 
+        type="password" 
+        class="form-control" 
+        id="downloadPassword" 
+        name="password" 
+        placeholder="Enter password to download"
+        required
+      />
+    </div>
+    <div id="errorMessage" class="alert alert-danger d-none" role="alert"></div>
+    <div class="d-flex gap-3">
+      <button type="submit" class="btn btn-primary">Verify & Download</button>
+      <a class="btn btn-outline-light" href="/story/<%= storyId %>">Cancel</a>
+    </div>
+  </form>
+</section>
+
+<script>
+  const form = document.getElementById('downloadVerifyForm');
+  const errorDiv = document.getElementById('errorMessage');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const password = document.getElementById('downloadPassword').value;
+
+    try {
+      const response = await fetch('/story/<%= storyId %>/download-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.download) {
+        // Redirect to actual download
+        window.location.href = '/story/<%= storyId %>/download';
+      } else {
+        errorDiv.textContent = data.error || 'Incorrect password. Please try again.';
+        errorDiv.classList.remove('d-none');
+        document.getElementById('downloadPassword').value = '';
+      }
+    } catch (error) {
+      errorDiv.textContent = 'An error occurred. Please try again.';
+      errorDiv.classList.remove('d-none');
+    }
+  });
+</script>
+
+<%- include("partials/footer") %>

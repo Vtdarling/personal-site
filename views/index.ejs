@@ -1,0 +1,132 @@
+<%- include("partials/header") %>
+
+<section class="hero-card p-5 mb-5">
+  <div class="row g-4 align-items-center">
+    <div class="col-lg-6">
+      <h1 class="display-6 fw-semibold">🔪 Veeran's Biography</h1>
+      <p class="text-muted">
+        Capture your daily story in a calm, focused space. Your journal saves
+        automatically for today, so you can refine your story anytime.
+      </p>
+      <div class="card-meta">
+        <span class="text-muted">📅 <%= formattedDate %></span>
+        <span class="text-muted" id="currentTime">🕐 --:--</span>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="story-card p-4">
+        <h5 class="fw-semibold">Daily Chronicle</h5>
+        <p class="text-muted mb-0">
+          Document your battles, victories, and lessons learned. Every chapter of your journey matters.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="story-card p-4 p-lg-5">
+  <h2 class="fw-semibold mb-4">✍️ Maaveeran's Story</h2>
+  <% if (story) { %>
+  <div class="alert alert-success border-0 mb-3 animated-success" role="alert">
+    <%= saved ? "Your entry has been saved successfully." : "Already submitted for today." %>
+    Come back tomorrow for a fresh page.
+  </div>
+  <div class="d-flex flex-wrap gap-3 align-items-center">
+    <span class="text-muted">You can still explore past entries while you wait.</span>
+    <a class="btn btn-outline-light" href="/archive">Past Days</a>
+  </div>
+  <% } else { %>
+  <form method="POST" action="/" id="dailyStoryForm">
+    <div class="row g-4">
+      <div class="col-12">
+        <label class="form-label">Nickname for the Day</label>
+        <input
+          type="text"
+          name="title"
+          id="draftTitle"
+          class="form-control"
+          placeholder="Give this day a nickname"
+          value="<%= story ? story.title : "" %>"
+        />
+      </div>
+      <div class="col-12">
+        <label class="form-label">Your Story</label>
+        <textarea
+          name="content"
+          class="form-control"
+          rows="10"
+          placeholder="Write your story for today..."
+          id="draftContent"
+        ><%= story ? story.content : "" %></textarea>
+      </div>
+      <div class="col-12 d-flex flex-wrap gap-3">
+        <button class="btn btn-primary" type="submit">Save it in your life</button>
+        <a class="btn btn-outline-light" href="/archive">Past Days</a>
+      </div>
+      <% if (story && story.updatedAt) { %>
+      <div class="col-12 text-muted">
+        Last updated: <%= new Date(story.updatedAt).toLocaleString() %>
+      </div>
+      <% } %>
+    </div>
+  </form>
+  <% } %>
+</section>
+
+<script>
+  const draftKey = "daily-story-draft";
+  const titleInput = document.getElementById("draftTitle");
+  const contentInput = document.getElementById("draftContent");
+  const form = document.getElementById("dailyStoryForm");
+  const timeEl = document.getElementById("currentTime");
+
+  // Update time display
+  const updateTime = () => {
+    const now = new Date();
+    const hours = now.getHours();
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = String(hours % 12 || 12).padStart(2, '0');
+    if (timeEl) {
+      timeEl.textContent = `🕐 ${displayHours}:${minutes} ${ampm}`;
+    }
+  };
+  updateTime();
+  setInterval(updateTime, 1000 * 60); // Update every minute
+
+  const loadDraft = () => {
+    const raw = localStorage.getItem(draftKey);
+    if (!raw) return;
+    try {
+      const draft = JSON.parse(raw);
+      if (titleInput && !titleInput.value) titleInput.value = draft.title || "";
+      if (contentInput && !contentInput.value) contentInput.value = draft.content || "";
+    } catch (error) {
+      localStorage.removeItem(draftKey);
+    }
+  };
+
+  const saveDraft = () => {
+    const draft = {
+      title: titleInput ? titleInput.value : "",
+      content: contentInput ? contentInput.value : "",
+      savedAt: Date.now(),
+    };
+    localStorage.setItem(draftKey, JSON.stringify(draft));
+  };
+
+  [titleInput, contentInput].forEach((field) => {
+    if (!field) return;
+    field.addEventListener("input", saveDraft);
+  });
+
+  if (form) {
+    form.addEventListener("submit", () => {
+      localStorage.removeItem(draftKey);
+    });
+  }
+
+  loadDraft();
+</script>
+
+<%- include("partials/footer") %>
