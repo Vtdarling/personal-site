@@ -10,6 +10,8 @@ const rateLimit = require("express-rate-limit");
 const csrf = require("csurf");
 const morgan = require("morgan");
 const Sentry = require("@sentry/node");
+const mongoSanitize = require("express-mongo-sanitize");
+const { body, validationResult } = require("express-validator");
 const indexRoutes = require("./routes/index");
 
 const app = express();
@@ -105,6 +107,15 @@ app.use(bodyParser.urlencoded({ extended: false, limit: '10mb' }));
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, "public")));
 
+// ============ SECURITY: INPUT SANITIZATION ============
+// Protect against MongoDB injection attacks
+app.use(mongoSanitize({
+  replaceWith: '_',
+  onSanitize: ({ req, key }) => {
+    console.warn(`Sanitized request from ${req.ip}: ${key}`);
+  }
+}));
+
 // ============ SESSION MIDDLEWARE ============
 app.use(session({
   secret: process.env.SESSION_SECRET || "veeran-secret-key-2026-change-in-production",
@@ -154,7 +165,8 @@ app.use((err, req, res, next) => {
   console.error('Error:', err);
   
   if (isProduction) {
-    retitle: 'Error',
+    return res.status(500).render('error', { 
+      title: 'Error',
       message: 'An error occurred. Please try again later.',
       error: {}
     });
@@ -162,7 +174,6 @@ app.use((err, req, res, next) => {
   
   res.status(500).render('error', { 
     title: 'Error',
-  res.status(500).render('error', { 
     message: err.message,
     error: err
   });

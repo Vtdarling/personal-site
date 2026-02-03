@@ -1,6 +1,7 @@
 // Location: ./routes/index.js
 const express = require("express");
 const bcrypt = require("bcryptjs");
+const { body, validationResult } = require("express-validator");
 const Story = require("../models/Story");
 const Goal = require("../models/Goal");
 const AuditLog = require("../models/AuditLog");
@@ -61,6 +62,71 @@ const getClientIp = (req) => {
   return req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'unknown';
 };
 
+// ============ INPUT SANITIZATION ============
+const sanitizeHtml = (text) => {
+  if (!text) return '';
+  // Strip ALL HTML tags to prevent XSS
+  // Repeat until no more tags found (handles nested/malformed tags)
+  let sanitized = text;
+  let previousLength;
+  
+  do {
+    previousLength = sanitized.length;
+    // Remove any HTML-like tags including script, style, etc.
+    sanitized = sanitized.replace(/<[^>]*>/g, '');
+  } while (sanitized.length !== previousLength);
+  
+  return sanitized.trim();
+};
+
+const validateStoryInput = [
+  body('title')
+    .trim()
+    .notEmpty().withMessage('Title is required')
+    .isLength({ max: 200 }).withMessage('Title must be 200 characters or less')
+    .customSanitizer(sanitizeHtml),
+  body('content')
+    .optional()
+    .trim()
+    .isLength({ max: 50000 }).withMessage('Content must be 50000 characters or less')
+    .customSanitizer(sanitizeHtml)
+];
+
+const validatePasswordInput = [
+  body('password')
+    .trim()
+    .notEmpty().withMessage('Invalid credentials')
+    .isLength({ min: 1, max: 100 }).withMessage('Invalid credentials')
+];
+
+const validateGoalInput = [
+  body('goal')
+    .trim()
+    .notEmpty().withMessage('Goal is required')
+    .isLength({ max: 5000 }).withMessage('Goal must be 5000 characters or less')
+    .customSanitizer(sanitizeHtml)
+];
+
+const validateFitnessMessage = [
+  body('message')
+    .trim()
+    .notEmpty().withMessage('Message is required')
+    .isLength({ max: 500 }).withMessage('Message must be 500 characters or less')
+    .customSanitizer(sanitizeHtml)
+];
+
+const handleValidationErrors = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const firstError = errors.array()[0];
+    return res.status(400).render('error', { 
+      message: firstError.msg, 
+      error: {} 
+    });
+  }
+  next();
+};
+
 const logAuditEvent = async (action, status, details, req, severity = 'info') => {
   try {
     await AuditLog.create({
@@ -106,7 +172,7 @@ router.get("/login", (req, res) => {
   res.render("login", { title: "Login", error: null, isLocked, csrfToken: req.csrfToken() });
 });
 
-router.post("/login", async (req, res) => {
+router.post("/login", validatePasswordInput, handleValidationErrors, async (req, res) => {
   const { password } = req.body;
   const ip = getClientIp(req);
 
@@ -165,7 +231,7 @@ router.get("/archive-login", (req, res) => {
   }
 });
 
-router.post("/archive-login", async (req, res) => {
+router.post("/archive-login", validatePasswordInput, handleValidationErrors, async (req, res) => {
   const { password } = req.body;
   const ip = `archive-${getClientIp(req)}`;
 
@@ -226,14 +292,10 @@ router.get("/", checkAuth, async (req, res) => {
   }
 });
 
-router.post("/", checkAuth, async (req, res) => {
+router.post("/", checkAuth, validateStoryInput, handleValidationErrors, async (req, res) => {
   try {
     const formattedDate = getTodayKey();
     const { title, content } = req.body;
-
-    if (!title || title.trim().length === 0) {
-      return res.status(400).render("error", { message: "Title required", error: {} });
-    }
 
     await Story.findOneAndUpdate(
       { formattedDate, category: "daily" },
@@ -293,7 +355,12 @@ router.get("/story/:id", checkAuth, checkArchiveAuth, async (req, res) => {
   }
 });
 
-router.post("/story/:id", checkAuth, checkArchiveAuth, async (req, res) => {
+router.post("/story/:id", checkAuth, checkArchiveAuth, validateStoryInput, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ error: errors.array()[0].msg });
+  }
+
   try {
     const story = await Story.findById(req.params.id);
     if (!story || story.formattedDate !== getTodayKey()) {
@@ -335,12 +402,14 @@ router.get("/add-love-story", checkAuth, checkArchiveAuth, (req, res) => {
   res.render("love-story-form", { title: "Add Love Story", csrfToken: req.csrfToken() });
 });
 
-router.post("/add-love-story", checkAuth, checkArchiveAuth, async (req, res) => {
+router.post("/add-love-story", checkAuth, checkArchiveAuth, validateStoryInput, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ error: errors.array()[0].msg });
+  }
+
   try {
     const { title, formattedDate, content } = req.body;
-    if (!title || title.trim().length === 0) {
-      return res.status(400).json({ error: "Title required" });
-    }
 
     const storyDate = formattedDate || getTodayKey();
     const newStory = await Story.create({
@@ -462,7 +531,7 @@ router.get("/goals", checkAuth, async (req, res) => {
   }
 });
 
-router.post("/goals", checkAuth, async (req, res) => {
+router.post("/goals", checkAuth, validateGoalInput, handleValidationErrors, async (req, res) => {
   try {
     const weekKey = getWeekKey();
     const { goal } = req.body;
@@ -485,12 +554,13 @@ router.get("/fitness", checkAuth, (req, res) => {
   res.render("fitness", { title: "Fitness Coach", csrfToken: req.csrfToken() });
 });
 
-router.post("/fitness/chat", checkAuth, async (req, res) => {
-  const { message } = req.body;
-
-  if (!message) {
-    return res.status(400).json({ success: false, response: "Message required" });
+router.post("/fitness/chat", checkAuth, validateFitnessMessage, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ success: false, response: errors.array()[0].msg });
   }
+
+  const { message } = req.body;
 
   const allowedTopics = /(exercise|workout|fitness|yoga|stretch|cardio|strength|health|wellness|nutrition|diet|calorie|protein|hydration|sleep|run|walk|jog|gym|muscle|weight|training|abs|core|legs|arms|chest|back|shoulder|squat|plank|pushup|pullup|lunge|jumping|aerobic|pilates|meditation|breathing|posture|flexibility|endurance|stamina)/i;
   if (!allowedTopics.test(message)) {
