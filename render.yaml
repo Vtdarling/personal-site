@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: personal-site
+    env: node
+    plan: free
+    buildCommand: npm ci --only=production
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_OPTIONS
+        value: --max-old-space-size=512
