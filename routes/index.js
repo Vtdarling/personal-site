@@ -95,8 +95,8 @@ const validateStoryInput = [
 const validatePasswordInput = [
   body('password')
     .trim()
-    .notEmpty().withMessage('Password is required')
-    .isLength({ min: 1, max: 100 }).withMessage('Invalid password length')
+    .notEmpty().withMessage('Invalid credentials')
+    .isLength({ min: 1, max: 100 }).withMessage('Invalid credentials')
 ];
 
 const validateGoalInput = [
