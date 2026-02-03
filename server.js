@@ -15,6 +15,9 @@ const indexRoutes = require("./routes/index");
 const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
 
+// ============ TRUST PROXY (FOR RENDER & REVERSE PROXIES) ============
+app.set('trust proxy', 1);
+
 // ============ SENTRY ERROR MONITORING ============
 if (process.env.SENTRY_DSN) {
   Sentry.init({
@@ -132,6 +135,7 @@ app.use("/", indexRoutes);
 app.use((err, req, res, next) => {
   if (err.code === 'EBADCSRFTOKEN') {
     res.status(403).render('error', { 
+      title: 'CSRF Error',
       message: 'Invalid form submission. Please try again.',
       error: isProduction ? {} : err 
     });
@@ -150,12 +154,14 @@ app.use((err, req, res, next) => {
   console.error('Error:', err);
   
   if (isProduction) {
-    return res.status(500).render('error', { 
+    retitle: 'Error',
       message: 'An error occurred. Please try again later.',
       error: {}
     });
   }
   
+  res.status(500).render('error', { 
+    title: 'Error',
   res.status(500).render('error', { 
     message: err.message,
     error: err
