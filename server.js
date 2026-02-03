@@ -10,6 +10,8 @@ const rateLimit = require("express-rate-limit");
 const csrf = require("csurf");
 const morgan = require("morgan");
 const Sentry = require("@sentry/node");
+const mongoSanitize = require("express-mongo-sanitize");
+const { body, validationResult } = require("express-validator");
 const indexRoutes = require("./routes/index");
 
 const app = express();
@@ -101,6 +103,15 @@ app.set("views", path.join(__dirname, "views"));
 app.use(bodyParser.urlencoded({ extended: false, limit: '10mb' }));
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, "public")));
+
+// ============ SECURITY: INPUT SANITIZATION ============
+// Protect against MongoDB injection attacks
+app.use(mongoSanitize({
+  replaceWith: '_',
+  onSanitize: ({ req, key }) => {
+    console.warn(`Sanitized request from ${req.ip}: ${key}`);
+  }
+}));
 
 // ============ SESSION MIDDLEWARE ============
 app.use(session({
