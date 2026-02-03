@@ -65,11 +65,18 @@ const getClientIp = (req) => {
 // ============ INPUT SANITIZATION ============
 const sanitizeHtml = (text) => {
   if (!text) return '';
-  // Remove HTML tags and script content to prevent XSS
-  return text
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/<[^>]+>/g, '')
-    .trim();
+  // Strip ALL HTML tags to prevent XSS
+  // Repeat until no more tags found (handles nested/malformed tags)
+  let sanitized = text;
+  let previousLength;
+  
+  do {
+    previousLength = sanitized.length;
+    // Remove any HTML-like tags including script, style, etc.
+    sanitized = sanitized.replace(/<[^>]*>/g, '');
+  } while (sanitized.length !== previousLength);
+  
+  return sanitized.trim();
 };
 
 const validateStoryInput = [
