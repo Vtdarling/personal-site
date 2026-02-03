@@ -3,7 +3,7 @@ services:
     name: personal-site
     env: node
     plan: free
-    buildCommand: npm ci --only=production
+    buildCommand: rm -rf node_modules package-lock.json && npm cache clean --force && npm install --production
     startCommand: npm start
     envVars:
       - key: NODE_ENV
