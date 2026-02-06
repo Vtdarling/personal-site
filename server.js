@@ -10,7 +10,7 @@ const rateLimit = require("express-rate-limit");
 const csrf = require("csurf");
 const morgan = require("morgan");
 const Sentry = require("@sentry/node");
-const mongoSanitize = require("express-mongo-sanitize");
+const mongoSanitize = require("./middleware/mongo-sanitize-express5");
 const { body, validationResult } = require("express-validator");
 const indexRoutes = require("./routes/index");
 
