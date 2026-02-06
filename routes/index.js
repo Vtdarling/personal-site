@@ -223,6 +223,12 @@ router.get("/logout", async (req, res) => {
   req.session.save(() => res.redirect("/login"));
 });
 
+router.get("/archive-logout", async (req, res) => {
+  await logAuditEvent('archive_logout', 'success', 'Archive session ended', req);
+  req.session.archiveAccess = false;
+  req.session.save(() => res.redirect("/archive-login"));
+});
+
 router.get("/archive-login", (req, res) => {
   if (req.session && req.session.authenticated) {
     res.render("archive-login", { title: "Archive Access", error: null, csrfToken: req.csrfToken() });
