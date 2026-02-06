@@ -3,6 +3,10 @@
 
 'use strict';
 
+// Regex to match MongoDB injection patterns:
+// - Keys starting with $ (e.g., $where, $gt, $ne)
+// - Keys containing . anywhere (e.g., user.name for nested property access)
+// This intentionally uses /^\$|\./ which matches: (start with $) OR (contains .)
 const TEST_REGEX = /^\$|\./;
 const REPLACE_REGEX = /^\$|\./g;
 

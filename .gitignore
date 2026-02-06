@@ -42,3 +42,4 @@ temp/
 *.pem
 *.key
 *.cert
+test-sanitization.js
